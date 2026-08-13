@@ -7,3 +7,6 @@ game_root = "game"
 file_path = "game/default.xex"
 out_directory_path = "generated/default"
 includes = []
+
+[functions]
+"0x8285CC90" = { name = "sub_8285CC90", size = 0xC8 }
