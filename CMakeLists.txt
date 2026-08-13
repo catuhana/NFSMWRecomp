@@ -17,3 +17,9 @@ else()
 endif()
 
 rexglue_setup_target(nfsmwrecomp)
+
+# workaround to fix imgui error on compilation
+if(TARGET imgui)
+    target_include_directories(nfsmwrecomp PRIVATE
+        $<TARGET_PROPERTY:imgui,INTERFACE_INCLUDE_DIRECTORIES>)
+endif()
