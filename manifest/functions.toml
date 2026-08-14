@@ -1,1 +1,4 @@
 [functions]
+0x8285CC90 = { end = 0x8285CD58 }
+0x824EDB88 = { end = 0x824EDC0C }
+0x824EDC10 = { end = 0x824EDE44 }
