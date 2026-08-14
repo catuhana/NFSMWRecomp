@@ -66,7 +66,7 @@ endif()
 # Codegen target - run 'cmake --build . --target NFSMWRecomp_codegen'
 # Uses the manifest to drive codegen for all modules (entrypoint + DLLs).
 add_custom_target(NFSMWRecomp_codegen
-    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/manifest.toml
+    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/manifest.toml --log-level trace --log-file ${CMAKE_CURRENT_SOURCE_DIR}/generated/rexglue_codegen.log
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating recompiled code for NFSMWRecomp"
     VERBATIM
