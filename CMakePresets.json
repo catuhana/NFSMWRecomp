@@ -7,14 +7,21 @@
   },
   "configurePresets": [
     {
-      "name": "windows-base",
+      "name": "base",
       "hidden": true,
       "generator": "Ninja",
+      "cacheVariables": {
+        "REXSDK_DIR": "${sourceDir}/thirdparty/rexglue-sdk"
+      }
+    },
+    {
+      "name": "windows-base",
+      "hidden": true,
+      "inherits": "base",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "REXSDK_DIR": "${sourceDir}/thirdparty/rexglue-sdk"
+        "CMAKE_CXX_COMPILER": "clang++"
       },
       "condition": {
         "type": "equals",
@@ -25,12 +32,11 @@
     {
       "name": "linux-base",
       "hidden": true,
-      "generator": "Ninja",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang-20",
-        "CMAKE_CXX_COMPILER": "clang++-20",
-        "REXSDK_DIR": "${sourceDir}/thirdparty/rexglue-sdk"
+        "CMAKE_CXX_COMPILER": "clang++-20"
       },
       "condition": {
         "type": "equals",
@@ -41,13 +47,12 @@
     {
       "name": "mac-base",
       "hidden": true,
-      "generator": "Ninja",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_OSX_ARCHITECTURES": "x86_64",
-        "REXSDK_DIR": "${sourceDir}/thirdparty/rexglue-sdk"
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
       },
       "condition": {
         "type": "equals",
