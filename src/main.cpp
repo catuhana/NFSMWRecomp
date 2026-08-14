@@ -1,4 +1,4 @@
-#include "generated/default/NFSMWRecomp_init.h"
+#include "generated/default/nfsmwrecomp_init.h"
 
 #include "NFSMWRecompApp.h"
 

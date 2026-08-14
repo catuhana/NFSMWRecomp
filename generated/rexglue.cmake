@@ -14,7 +14,7 @@ else()
     if(REXSDK_VERSION)
         find_package(rexglue ${REXSDK_VERSION} EXACT QUIET CONFIG)
     else()
-        find_package(rexglue 0.9.0 QUIET CONFIG)
+        find_package(rexglue 0.10.0 QUIET CONFIG)
     endif()
     if(NOT rexglue_FOUND)
         message(FATAL_ERROR
@@ -39,11 +39,47 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/sources.cmake")
     set(REXGLUE_ENTRYPOINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated/default")
 endif()
 
+set(REXGLUE_RECOMP_DEBUG_INFO "line-tables-only" CACHE STRING
+    "Debug info level for generated code: line-tables-only, full, or none")
+
+function(rexglue_apply_recomp_settings target_name pch_header)
+    target_precompile_headers(${target_name} PRIVATE "${pch_header}")
+
+    if(MSVC)
+        target_compile_options(${target_name} PRIVATE /EHa)
+    endif()
+
+    if(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "none")
+        target_compile_options(${target_name} PRIVATE
+            $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-g0>)
+    elseif(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "line-tables-only")
+        target_compile_options(${target_name} PRIVATE
+            $<$<CXX_COMPILER_ID:Clang,AppleClang>:-gline-tables-only>)
+    endif()
+endfunction()
+
 # Configure a rexglue target with SDK libraries and platform settings.
 # Call after add_executable() in your CMakeLists.txt.
 # Usage: rexglue_setup_target(<target> [GPU_PLUGINS xenos])
 macro(rexglue_setup_target target_name)
-    target_sources(${target_name} PRIVATE ${REXGLUE_ENTRYPOINT_GENERATED_SOURCES})
+    if(REXGLUE_ENTRYPOINT_GENERATED_SOURCES)
+        add_library(${target_name}_recomp OBJECT
+            ${REXGLUE_ENTRYPOINT_GENERATED_SOURCES})
+        target_include_directories(${target_name}_recomp PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${REXGLUE_ENTRYPOINT_INCLUDE_DIR}
+        )
+        target_link_libraries(${target_name}_recomp PRIVATE rex::runtime)
+        rexglue_apply_target_settings(${target_name}_recomp)
+        rexglue_apply_recomp_settings(${target_name}_recomp
+            "${REXGLUE_ENTRYPOINT_INCLUDE_DIR}/nfsmwrecomp_pch.h")
+        add_dependencies(${target_name}_recomp nfsmwrecomp_codegen)
+        target_link_libraries(${target_name} PRIVATE
+            ${target_name}_recomp)
+    endif()
+    # Also on the host, so a tree that has never run codegen still generates it.
+    add_dependencies(${target_name} nfsmwrecomp_codegen)
     target_include_directories(${target_name} PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -58,16 +94,20 @@ macro(rexglue_setup_target target_name)
     rexglue_configure_target(${target_name} ${ARGN})
 endmacro()
 
+# Codegen runs as part of the build, re-running only when an input in codegen.d
+# changes. Build it alone with 'cmake --build . --target nfsmwrecomp_codegen'.
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.build.stamp"
+    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/nfsmwrecomp_manifest.toml
+    DEPFILE "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.d"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    COMMENT "Generating recompiled code for nfsmwrecomp"
+    VERBATIM
+)
+add_custom_target(nfsmwrecomp_codegen
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.build.stamp")
+
 # Include DLL module shared library targets if codegen has generated them
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/dll_targets.cmake")
     include(generated/default/dll_targets.cmake)
 endif()
-
-# Codegen target - run 'cmake --build . --target NFSMWRecomp_codegen'
-# Uses the manifest to drive codegen for all modules (entrypoint + DLLs).
-add_custom_target(NFSMWRecomp_codegen
-    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/manifest.toml --log-level trace --log-file ${CMAKE_CURRENT_SOURCE_DIR}/generated/logs/rexglue_codegen.log
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating recompiled code for NFSMWRecomp"
-    VERBATIM
-)
