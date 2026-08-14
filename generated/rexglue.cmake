@@ -63,11 +63,11 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/dll_targets.cmake")
     include(generated/default/dll_targets.cmake)
 endif()
 
-# Codegen target - run 'cmake --build . --target nfsmwrecomp_codegen'
+# Codegen target - run 'cmake --build . --target NFSMWRecomp_codegen'
 # Uses the manifest to drive codegen for all modules (entrypoint + DLLs).
-add_custom_target(nfsmwrecomp_codegen
-    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/nfsmwrecomp_manifest.toml
+add_custom_target(NFSMWRecomp_codegen
+    COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/manifest.toml
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Generating recompiled code for nfsmwrecomp"
+    COMMENT "Generating recompiled code for NFSMWRecomp"
     VERBATIM
 )

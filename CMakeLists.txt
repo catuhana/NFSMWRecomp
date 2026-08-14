@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(nfsmwrecomp LANGUAGES CXX)
+project(NFSMWRecomp LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,13 +11,13 @@ set(NFSMWRECOMP_SOURCES
 )
 
 if(WIN32)
-    add_executable(nfsmwrecomp WIN32 ${NFSMWRECOMP_SOURCES})
+    add_executable(NFSMWRecomp WIN32 ${NFSMWRECOMP_SOURCES})
 else()
-    add_executable(nfsmwrecomp ${NFSMWRECOMP_SOURCES})
+    add_executable(NFSMWRecomp ${NFSMWRECOMP_SOURCES})
 endif()
 
-rexglue_setup_target(nfsmwrecomp)
+rexglue_setup_target(NFSMWRecomp)
 
 # workaround to imgui issue for now.
-target_link_libraries(nfsmwrecomp PRIVATE rex::ui)
+target_link_libraries(NFSMWRecomp PRIVATE rex::ui)
 
