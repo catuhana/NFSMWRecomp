@@ -17,3 +17,7 @@ else()
 endif()
 
 rexglue_setup_target(nfsmwrecomp)
+
+# workaround to imgui issue for now.
+target_link_libraries(nfsmwrecomp PRIVATE rex::ui)
+
