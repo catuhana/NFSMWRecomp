@@ -7,22 +7,25 @@
   },
   "configurePresets": [
     {
-      "name": "base",
       "hidden": true,
+      "name": "base",
       "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+
         "REXSDK_DIR": "${sourceDir}/thirdparty/rexglue-sdk"
       }
     },
 
     {
-      "name": "windows-base",
       "hidden": true,
+      "name": "windows-base",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
+        "REXGLUE_USE_D3D12": false,
+        "REXGLUE_USE_VULKAN": true
       },
       "condition": {
         "type": "equals",
@@ -32,14 +35,9 @@
     },
 
     {
-      "name": "linux-base",
       "hidden": true,
+      "name": "linux-base",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -48,14 +46,9 @@
     },
 
     {
-      "name": "mac-base",
       "hidden": true,
+      "name": "macos-base",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
@@ -64,8 +57,12 @@
     },
 
     {
-      "name": "amd64-base",
       "hidden": true,
+      "name": "amd64-base",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
       "cacheVariables": {
         "CMAKE_C_FLAGS": "-march=x86-64-v2",
         "CMAKE_CXX_FLAGS": "-march=x86-64-v2"
@@ -73,8 +70,12 @@
     },
 
     {
-      "name": "arm64-base",
       "hidden": true,
+      "name": "arm64-base",
+      "architecture": {
+        "value": "arm64",
+        "strategy": "external"
+      },
       "cacheVariables": {
         "CMAKE_C_FLAGS": "-march=armv8-a",
         "CMAKE_CXX_FLAGS": "-march=armv8-a"
@@ -82,117 +83,120 @@
     },
 
     {
+      "hidden": true,
+      "name": "debug-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "hidden": true,
+      "name": "release-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+
+        "REXGLUE_ENABLE_TRACY": false,
+        "REXGLUE_ENABLE_PERF_COUNTERS": false
+      }
+    },
+    {
+      "hidden": true,
+      "name": "relwithdebinfo-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+
+    {
       "name": "win-amd64-debug",
       "displayName": "Windows AMD64 Debug",
-      "inherits": ["windows-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["windows-base", "amd64-base", "debug-base"]
     },
     {
       "name": "win-amd64-release",
       "displayName": "Windows AMD64 Release",
-      "inherits": ["windows-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["windows-base", "amd64-base", "release-base"]
     },
     {
       "name": "win-amd64-relwithdebinfo",
       "displayName": "Windows AMD64 RelWithDebInfo",
-      "inherits": ["windows-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["windows-base", "amd64-base", "relwithdebinfo-base"]
     },
 
     {
       "name": "win-arm64-debug",
       "displayName": "Windows ARM64 Debug",
-      "inherits": ["windows-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["windows-base", "arm64-base", "debug-base"]
     },
     {
       "name": "win-arm64-release",
       "displayName": "Windows ARM64 Release",
-      "inherits": ["windows-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["windows-base", "arm64-base", "release-base"]
     },
     {
       "name": "win-arm64-relwithdebinfo",
       "displayName": "Windows ARM64 RelWithDebInfo",
-      "inherits": ["windows-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["windows-base", "arm64-base", "relwithdebinfo-base"]
     },
 
     {
       "name": "linux-amd64-debug",
       "displayName": "Linux AMD64 Debug",
-      "inherits": ["linux-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["linux-base", "amd64-base", "debug-base"]
     },
     {
       "name": "linux-amd64-release",
       "displayName": "Linux AMD64 Release",
-      "inherits": ["linux-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["linux-base", "amd64-base", "release-base"]
     },
     {
       "name": "linux-amd64-relwithdebinfo",
       "displayName": "Linux AMD64 RelWithDebInfo",
-      "inherits": ["linux-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["linux-base", "amd64-base", "relwithdebinfo-base"]
     },
 
     {
       "name": "linux-arm64-debug",
       "displayName": "Linux ARM64 Debug",
-      "inherits": ["linux-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["linux-base", "arm64-base", "debug-base"]
     },
     {
       "name": "linux-arm64-release",
       "displayName": "Linux ARM64 Release",
-      "inherits": ["linux-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["linux-base", "arm64-base", "release-base"]
     },
     {
       "name": "linux-arm64-relwithdebinfo",
       "displayName": "Linux ARM64 RelWithDebInfo",
-      "inherits": ["linux-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["linux-base", "arm64-base", "relwithdebinfo-base"]
     },
 
     {
-      "name": "mac-amd64-debug",
+      "name": "macos-amd64-debug",
       "displayName": "macOS AMD64 Debug",
-      "inherits": ["mac-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["macos-base", "amd64-base", "debug-base"]
     },
     {
-      "name": "mac-amd64-release",
+      "name": "macos-amd64-release",
       "displayName": "macOS AMD64 Release",
-      "inherits": ["mac-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["macos-base", "amd64-base", "release-base"]
     },
     {
-      "name": "mac-amd64-relwithdebinfo",
+      "name": "macos-amd64-relwithdebinfo",
       "displayName": "macOS AMD64 RelWithDebInfo",
-      "inherits": ["mac-base", "amd64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["macos-base", "amd64-base", "relwithdebinfo-base"]
     },
 
     {
-      "name": "mac-arm64-debug",
+      "name": "macos-arm64-debug",
       "displayName": "macOS ARM64 Debug",
-      "inherits": ["mac-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+      "inherits": ["macos-base", "arm64-base", "debug-base"]
     },
     {
-      "name": "mac-arm64-release",
+      "name": "macos-arm64-release",
       "displayName": "macOS ARM64 Release",
-      "inherits": ["mac-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+      "inherits": ["macos-base", "arm64-base", "release-base"]
     },
     {
-      "name": "mac-arm64-relwithdebinfo",
+      "name": "macos-arm64-relwithdebinfo",
       "displayName": "macOS ARM64 RelWithDebInfo",
-      "inherits": ["mac-base", "arm64-base"],
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+      "inherits": ["macos-base", "arm64-base", "relwithdebinfo-base"]
     }
   ],
   "buildPresets": [
@@ -249,29 +253,29 @@
     },
 
     {
-      "name": "mac-amd64-debug",
-      "configurePreset": "mac-amd64-debug"
+      "name": "macos-amd64-debug",
+      "configurePreset": "macos-amd64-debug"
     },
     {
-      "name": "mac-amd64-release",
-      "configurePreset": "mac-amd64-release"
+      "name": "macos-amd64-release",
+      "configurePreset": "macos-amd64-release"
     },
     {
-      "name": "mac-amd64-relwithdebinfo",
-      "configurePreset": "mac-amd64-relwithdebinfo"
+      "name": "macos-amd64-relwithdebinfo",
+      "configurePreset": "macos-amd64-relwithdebinfo"
     },
 
     {
-      "name": "mac-arm64-debug",
-      "configurePreset": "mac-arm64-debug"
+      "name": "macos-arm64-debug",
+      "configurePreset": "macos-arm64-debug"
     },
     {
-      "name": "mac-arm64-release",
-      "configurePreset": "mac-arm64-release"
+      "name": "macos-arm64-release",
+      "configurePreset": "macos-arm64-release"
     },
     {
-      "name": "mac-arm64-relwithdebinfo",
-      "configurePreset": "mac-arm64-relwithdebinfo"
+      "name": "macos-arm64-relwithdebinfo",
+      "configurePreset": "macos-arm64-relwithdebinfo"
     }
   ]
 }
