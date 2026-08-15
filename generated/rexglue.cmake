@@ -32,30 +32,44 @@ if(NOT DEFINED REXGLUE_HOST_TARGET)
     set(REXGLUE_HOST_TARGET ${PROJECT_NAME})
 endif()
 
+set(REXGLUE_RECOMP_DEBUG_INFO "line-tables-only" CACHE STRING
+    "Debug info level for generated code: line-tables-only, full, or none")
+
+# Guest SEH scopes emit __try/__except, which traps hardware faults only under
+# asynchronous EH. clang++ spells that flag the GNU way.
+set(REXGLUE_RECOMP_OPTIONS "")
+if(WIN32)
+    if(MSVC)
+        list(APPEND REXGLUE_RECOMP_OPTIONS /EHa)
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        list(APPEND REXGLUE_RECOMP_OPTIONS -fasync-exceptions)
+    endif()
+endif()
+if(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "none")
+    list(APPEND REXGLUE_RECOMP_OPTIONS
+        $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-g0>)
+elseif(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "line-tables-only")
+    list(APPEND REXGLUE_RECOMP_OPTIONS
+        $<$<CXX_COMPILER_ID:Clang,AppleClang>:-gline-tables-only>)
+endif()
+
 # Include entrypoint generated code if codegen has been run.
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/sources.cmake")
     include(generated/default/sources.cmake)
     set(REXGLUE_ENTRYPOINT_GENERATED_SOURCES ${GENERATED_SOURCES})
     set(REXGLUE_ENTRYPOINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated/default")
+
+    # Carried on the sources so they hold for whichever target compiles them.
+    set_source_files_properties(${REXGLUE_ENTRYPOINT_GENERATED_SOURCES}
+        PROPERTIES COMPILE_OPTIONS "${REXGLUE_RECOMP_OPTIONS}")
 endif()
 
-set(REXGLUE_RECOMP_DEBUG_INFO "line-tables-only" CACHE STRING
-    "Debug info level for generated code: line-tables-only, full, or none")
-
+# The options go on the target as well: CMake compiles the header from its own
+# cmake_pch.hxx.cxx, which carries none of the source properties above, and
+# clang rejects a PCH whose EH mode disagrees with the TU including it.
 function(rexglue_apply_recomp_settings target_name pch_header)
     target_precompile_headers(${target_name} PRIVATE "${pch_header}")
-
-    if(MSVC)
-        target_compile_options(${target_name} PRIVATE /EHa)
-    endif()
-
-    if(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "none")
-        target_compile_options(${target_name} PRIVATE
-            $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-g0>)
-    elseif(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "line-tables-only")
-        target_compile_options(${target_name} PRIVATE
-            $<$<CXX_COMPILER_ID:Clang,AppleClang>:-gline-tables-only>)
-    endif()
+    target_compile_options(${target_name} PRIVATE ${REXGLUE_RECOMP_OPTIONS})
 endfunction()
 
 # Configure a rexglue target with SDK libraries and platform settings.
@@ -96,8 +110,13 @@ endmacro()
 
 # Codegen runs as part of the build, re-running only when an input in codegen.d
 # changes. Build it alone with 'cmake --build . --target nfsmwrecomp_codegen'.
+# Listing the sources as outputs orders any target that compiles them after
+# codegen, including one a project assembles itself rather than taking the
+# library rexglue_setup_target() builds. The stamp comes first: the DEPFILE
+# names it.
 add_custom_command(
     OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.build.stamp"
+           ${REXGLUE_ENTRYPOINT_GENERATED_SOURCES}
     COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/nfsmwrecomp_manifest.toml
     DEPFILE "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.d"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
