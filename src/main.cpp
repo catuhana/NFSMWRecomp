@@ -1,5 +1,5 @@
 #include "generated/default/nfsmwrecomp_init.h"
 
-#include "NFSMWRecompApp.h"
+#include "App.hpp"
 
-REX_DEFINE_APP(NFSMWRecomp, NFSMWRecompApp::Create)
+REX_DEFINE_APP(NFSMW, nfsmw::App::Create)
