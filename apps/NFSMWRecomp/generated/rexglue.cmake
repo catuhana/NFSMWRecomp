@@ -54,10 +54,10 @@ elseif(REXGLUE_RECOMP_DEBUG_INFO STREQUAL "line-tables-only")
 endif()
 
 # Include entrypoint generated code if codegen has been run.
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/sources.cmake")
-    include(generated/default/sources.cmake)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default//sources.cmake")
+    include(./generated/default//sources.cmake)
     set(REXGLUE_ENTRYPOINT_GENERATED_SOURCES ${GENERATED_SOURCES})
-    set(REXGLUE_ENTRYPOINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/generated/default")
+    set(REXGLUE_ENTRYPOINT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default/")
 
     # Carried on the sources so they hold for whichever target compiles them.
     set_source_files_properties(${REXGLUE_ENTRYPOINT_GENERATED_SOURCES}
@@ -115,18 +115,18 @@ endmacro()
 # library rexglue_setup_target() builds. The stamp comes first: the DEPFILE
 # names it.
 add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.build.stamp"
+    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default//codegen.build.stamp"
            ${REXGLUE_ENTRYPOINT_GENERATED_SOURCES}
     COMMAND $<TARGET_FILE:rex::rexglue> codegen ${CMAKE_CURRENT_SOURCE_DIR}/nfsmwrecomp_manifest.toml
-    DEPFILE "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.d"
+    DEPFILE "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default//codegen.d"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Generating recompiled code for nfsmwrecomp"
     VERBATIM
 )
 add_custom_target(nfsmwrecomp_codegen
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/codegen.build.stamp")
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default//codegen.build.stamp")
 
 # Include DLL module shared library targets if codegen has generated them
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/generated/default/dll_targets.cmake")
-    include(generated/default/dll_targets.cmake)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/./generated/default//dll_targets.cmake")
+    include(./generated/default//dll_targets.cmake)
 endif()

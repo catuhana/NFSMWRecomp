@@ -1,9 +1,0 @@
-[project]
-name = "nfsmwrecomp"
-sdk_version = "0.10.0"
-game_root = "game"
-
-[entrypoint]
-file_path = "game/default.xex"
-out_directory_path = "generated/default"
-includes = ["config/functions.toml"]

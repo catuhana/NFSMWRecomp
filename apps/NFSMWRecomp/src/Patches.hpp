@@ -2,7 +2,7 @@
 
 #include <concepts>
 
-#include <rex/system/xmemory.h>
+#include <rex/memory.h>
 
 namespace nfsmw::patches
 {

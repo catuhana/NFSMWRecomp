@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rex/cvar.h>
-#include <rex/system/xmemory.h>
+#include <rex/memory.h>
 
 #include <cstdint>
 #include <string_view>
