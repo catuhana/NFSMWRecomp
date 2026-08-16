@@ -1,3 +1,4 @@
-[submodule "thirdparty/rexglue-sdk"]
-	path = thirdparty/rexglue-sdk
+[submodule "vendor/rexglue-sdk"]
+	path = vendor/rexglue-sdk
 	url = https://github.com/rexglue/rexglue-sdk
+	branch = development
