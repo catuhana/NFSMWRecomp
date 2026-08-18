@@ -4,12 +4,6 @@
 
 #include <memory>
 
-namespace rex::ui
-{
-  class WindowedApp;
-  class WindowedAppContext;
-}
-
 namespace NFSMW
 {
 
@@ -21,6 +15,7 @@ namespace NFSMW
     static std::unique_ptr<rex::ui::WindowedApp> Create(rex::ui::WindowedAppContext &ctx);
 
   protected:
+    void OnConfigurePaths(rex::PathConfig &paths) override;
     void OnPostLoadXexImage() override;
   };
 
