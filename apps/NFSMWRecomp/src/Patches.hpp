@@ -1,10 +1,10 @@
 #pragma once
 
-#include <concepts>
-
 #include <rex/memory.h>
 
-namespace nfsmw::patches
+#include <concepts>
+
+namespace NFSMW::Patches
 {
 
   template <typename T>
