@@ -1,35 +1,25 @@
 #include "NFSMWRecomp.hpp"
 
-#include <rex/rex_app.h>
-#include <rex/cvar.h>
+#include "generated/default/NFSMWRecomp_init.h"
 
 #include "Patches.hpp"
-#include "Patches/PostProcessing.cpp"
+#include "Patches/PostProcessing.hpp"
 
 namespace NFSMW
 {
 
-  class App : public rex::ReXApp
+  std::unique_ptr<rex::ui::WindowedApp> App::Create(rex::ui::WindowedAppContext &ctx)
   {
-  public:
-    using rex::ReXApp::ReXApp;
+    return std::unique_ptr<App>(new App(ctx, "NFSMWRecomp", PPCImageConfig));
+  }
 
-    static std::unique_ptr<rex::ui::WindowedApp> Create(
-        rex::ui::WindowedAppContext &ctx)
+  void App::OnPostLoadXexImage()
+  {
+    if (auto *memory = runtime()->memory())
     {
-      return std::unique_ptr<App>(new App(ctx, "NFSMWRecomp",
-                                          PPCImageConfig));
+      Patches::InstallAll<Patches::PostProcessing>(*memory);
     }
-
-  protected:
-    void OnPostLoadXexImage() override
-    {
-      if (auto *memory = runtime()->memory())
-      {
-        Patches::InstallAll<Patches::PostProcessing>(*memory);
-      }
-    }
-  };
+  }
 
 }
 
