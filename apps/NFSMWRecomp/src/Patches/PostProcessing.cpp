@@ -2,7 +2,10 @@
 
 #include <rex/cvar.h>
 
-REXCVAR_DEFINE_BOOL(disable_post_processing, false, "Patches", "Disable post-processing visual treatments");
+REXCVAR_DEFINE_BOOL(disable_post_processing,
+                    false,
+                    "Patches",
+                    "Disable post-processing effects");
 
 namespace NFSMW::Patches
 {
