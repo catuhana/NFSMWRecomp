@@ -19,3 +19,5 @@ namespace NFSMW::Patches
   }
 
 }
+
+#include "Patches/PostProcessing.hpp"

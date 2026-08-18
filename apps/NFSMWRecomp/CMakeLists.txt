@@ -3,6 +3,7 @@ include(cmake/merge_game_configs.cmake)
 include(generated/rexglue.cmake)
 
 add_executable(NFSMWRecomp WIN32
+    src/Patches/PostProcessing.cpp
     src/NFSMWRecomp.cpp
 )
 

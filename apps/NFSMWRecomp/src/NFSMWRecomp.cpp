@@ -3,7 +3,6 @@
 #include "generated/default/NFSMWRecomp_init.h"
 
 #include "Patches.hpp"
-#include "Patches/PostProcessing.hpp"
 
 namespace NFSMW
 {
