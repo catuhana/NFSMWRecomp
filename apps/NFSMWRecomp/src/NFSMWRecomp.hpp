@@ -2,6 +2,8 @@
 
 #include <rex/rex_app.h>
 
+#include <functional>
+#include <optional>
 #include <memory>
 
 namespace NFSMW
@@ -16,6 +18,8 @@ namespace NFSMW
 
   protected:
     void OnConfigurePaths(rex::PathConfig &paths) override;
+    std::optional<rex::PathConfig> OnFinalizePaths(const rex::PathConfig &defaults,
+                                                   std::function<void(rex::PathConfig)> resume) override;
     void OnPostLoadXexImage() override;
   };
 

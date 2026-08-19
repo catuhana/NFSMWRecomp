@@ -3,6 +3,7 @@
 #include "generated/default/NFSMWRecomp_init.h"
 
 #include "Patches.hpp"
+#include "UI/ISOExtractDialog.hpp"
 
 namespace NFSMW
 {
@@ -39,6 +40,17 @@ namespace NFSMW
   std::unique_ptr<rex::ui::WindowedApp> App::Create(rex::ui::WindowedAppContext &ctx)
   {
     return std::unique_ptr<App>(new App(ctx, "NFSMWRecomp", PPCImageConfig));
+  }
+
+  std::optional<rex::PathConfig> App::OnFinalizePaths(const rex::PathConfig &defaults,
+                                                      std::function<void(rex::PathConfig)> resume)
+  {
+    if (std::filesystem::exists(defaults.game_data_root / UI::kCompleteMarker))
+      return defaults;
+
+    new UI::ISOExtractDialog(imgui_drawer(), defaults.game_data_root, std::move(resume));
+
+    return std::nullopt;
   }
 
   void App::OnConfigurePaths(rex::PathConfig &paths)
