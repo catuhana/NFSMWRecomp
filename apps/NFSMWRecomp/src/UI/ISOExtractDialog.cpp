@@ -63,6 +63,12 @@ namespace NFSMW
 
     void ISOExtractDialog::OnDraw(ImGuiIO &io)
     {
+      if (const auto select_clicked = Render(io))
+        Update(*select_clicked);
+    }
+
+    std::optional<bool> ISOExtractDialog::Render(ImGuiIO &io)
+    {
       ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
       ImGui::SetNextWindowSize(io.DisplaySize);
 
@@ -76,7 +82,7 @@ namespace NFSMW
       {
         ImGui::End();
 
-        return;
+        return std::nullopt;
       }
 
       const float em = ImGui::GetFontSize();
@@ -172,38 +178,32 @@ namespace NFSMW
       ImGui::PopStyleVar();
       ImGui::Dummy(ImVec2(0.0f, spacing_y));
 
-      bool button_clicked = false;
       const bool is_idle = std::holds_alternative<States::SelectISO>(state_);
 
       ImGui::BeginDisabled(!is_idle);
-      button_clicked = ImGui::Button("Select ISO", ImVec2(block_width, button_height));
+      const bool select_clicked = ImGui::Button("Select ISO", ImVec2(block_width, button_height));
       ImGui::EndDisabled();
 
+      ImGui::EndGroup();
+      ImGui::End();
+
+      return select_clicked;
+    }
+
+    void ISOExtractDialog::Update(bool select_clicked)
+    {
       std::optional<State> next_state;
 
       std::visit(
           Overload{
               [&](const States::SelectISO &)
               {
-                if (button_clicked)
-                {
-#if defined(_WIN32)
-                  next_state = States::Browsing{
-                      .path_future = std::async(std::launch::async, [this]()
-                                                {
-                                                  NFD_Init();
-                                                  auto result = PromptForISO();
-                                                  NFD_Quit();
-
-                                                  return result; })};
-#else
-                  next_state = States::Browsing{};
-#endif
-                }
+                if (select_clicked)
+                  next_state = States::Browsing{.path_future = LaunchFilePicker()};
               },
+
               [&](States::Browsing &browsing)
               {
-#if defined(_WIN32)
                 if (browsing.path_future.wait_for(0s) == std::future_status::ready)
                 {
                   next_state = browsing.path_future.get()
@@ -216,25 +216,8 @@ namespace NFSMW
                                                                        { return ExtractISO(p, *progress); })}; })
                                    .value_or(States::SelectISO{});
                 }
-#else
-                NFD_Init();
-                auto path = PromptForISO();
-                NFD_Quit();
-
-                if (path)
-                {
-                  auto progress = std::make_shared<ExtractProgress>();
-                  next_state = States::Extracting{
-                      .progress = progress,
-                      .task = std::async(std::launch::async, [this, p = std::move(*path), progress]()
-                                         { return ExtractISO(p, *progress); })};
-                }
-                else
-                {
-                  next_state = States::SelectISO{};
-                }
-#endif
               },
+
               [&](States::Extracting &extracting)
               {
                 if (extracting.task.valid() && extracting.task.wait_for(0s) == std::future_status::ready)
@@ -254,12 +237,30 @@ namespace NFSMW
               }},
           state_);
 
-      ImGui::EndGroup();
-
       if (next_state)
         state_ = std::move(*next_state);
+    }
 
-      ImGui::End();
+    std::future<std::optional<std::filesystem::path>> ISOExtractDialog::LaunchFilePicker()
+    {
+#if defined(_WIN32)
+      return std::async(std::launch::async, [this]()
+                        {
+        NFD_Init();
+        auto result = PromptForISO();
+        NFD_Quit();
+
+        return result; });
+#else
+      NFD_Init();
+      auto result = PromptForISO();
+      NFD_Quit();
+
+      std::promise<std::optional<std::filesystem::path>> promise;
+      promise.set_value(std::move(result));
+
+      return promise.get_future();
+#endif
     }
 
     std::optional<std::filesystem::path> ISOExtractDialog::PromptForISO()

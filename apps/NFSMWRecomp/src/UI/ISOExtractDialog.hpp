@@ -110,7 +110,12 @@ namespace NFSMW
 
       using State = std::variant<States::SelectISO, States::Browsing, States::Extracting>;
 
+      std::optional<bool> Render(ImGuiIO &io);
+      void Update(bool select_clicked);
+
       [[nodiscard]] std::optional<std::filesystem::path> PromptForISO();
+      std::future<std::optional<std::filesystem::path>> LaunchFilePicker();
+
       [[nodiscard]] Result<void> ExtractISO(const std::filesystem::path &iso_path,
                                             ExtractProgress &progress);
       [[nodiscard]] Result<void> ExtractEntryRecursive(const rex::filesystem::Entry &entry,
