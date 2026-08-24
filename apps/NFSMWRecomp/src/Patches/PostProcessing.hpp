@@ -4,15 +4,13 @@
 
 #include <cstdint>
 
-namespace NFSMW::Patches
-{
+namespace NFSMW::Patches {
 
-  struct PostProcessing
-  {
-    static constexpr std::uint32_t kFlagVirtualAddress = 0x828F48B2;
+struct PostProcessing {
+  static constexpr std::uint32_t kFlagVirtualAddress = 0x828F48B2;
 
-    static void Install(rex::memory::Memory &memory);
-    static void SetDisabled(rex::memory::Memory &memory, bool disabled) noexcept;
-  };
+  static void Install(rex::memory::Memory &memory);
+  static void SetDisabled(rex::memory::Memory &memory, bool disabled) noexcept;
+};
 
-}
+} // namespace NFSMW::Patches

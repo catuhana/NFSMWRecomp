@@ -1,0 +1,21 @@
+---
+Checks: '
+-*,
+bugprone-*,
+clang-analyzer-*,
+concurrency-*,
+cppcoreguidelines-*,
+misc-*,
+modernize-*,
+performance-*,
+portability-*,
+readability-*,
+'
+
+HeaderFilterRegex: '^(?!.*/(vendor|build)/).*$'
+FormatStyle: file
+
+CheckOptions:
+  readability-identifier-length.IgnoredVariableNames: '^em$'
+  readability-identifier-length.IgnoredParameterNames: '^io$'
+...

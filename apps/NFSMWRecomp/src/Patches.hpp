@@ -4,20 +4,17 @@
 
 #include <concepts>
 
-namespace NFSMW::Patches
-{
+namespace NFSMW::Patches {
 
-  template <typename T>
-  concept Patch = requires(rex::memory::Memory &memory) {
-    { T::Install(memory) } -> std::same_as<void>;
-  };
+template <typename T>
+concept Patch = requires(rex::memory::Memory &memory) {
+  { T::Install(memory) } -> std::same_as<void>;
+};
 
-  template <Patch... TPatches>
-  void InstallAll(rex::memory::Memory &memory)
-  {
-    (TPatches::Install(memory), ...);
-  }
-
+template <Patch... TPatches> void InstallAll(rex::memory::Memory &memory) {
+  (TPatches::Install(memory), ...);
 }
 
-#include "Patches/PostProcessing.hpp"
+} // namespace NFSMW::Patches
+
+#include "Patches/PostProcessing.hpp" // IWYU pragma: export

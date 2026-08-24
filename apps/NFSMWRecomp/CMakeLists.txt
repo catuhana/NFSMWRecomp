@@ -4,11 +4,11 @@ include(cmake/merge_game_configs.cmake)
 
 include(generated/rexglue.cmake)
 
-FetchContent_Declare(NFDe
+FetchContent_Declare(nfd
     GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended
     GIT_TAG v1.3.0
 )
-FetchContent_MakeAvailable(NFDe)
+FetchContent_MakeAvailable(nfd)
 
 FetchContent_Declare(beman.cstring_view
     GIT_REPOSITORY https://github.com/bemanproject/cstring_view
