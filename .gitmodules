@@ -1,4 +1,4 @@
 [submodule "vendor/rexglue-sdk"]
 	path = vendor/rexglue-sdk
-	url = https://github.com/rexglue/rexglue-sdk
+	url = https://github.com/catuhana/rexglue-sdk
 	branch = development
