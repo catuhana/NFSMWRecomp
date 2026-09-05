@@ -4,6 +4,10 @@ include(cmake/merge_game_configs.cmake)
 
 include(generated/rexglue.cmake)
 
+if(LINUX)
+    set(NFD_PORTAL ON CACHE BOOL "" FORCE)
+endif()
+
 FetchContent_Declare(nfd
     GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended
     GIT_TAG v1.3.0
