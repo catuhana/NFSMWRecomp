@@ -2,8 +2,12 @@
 
 #include "generated/default/NFSMWRecomp_init.h" // IWYU pragma: keep
 
+#include "ISOExtract.hpp"
 #include "Patches.hpp"
 #include "UI/ISOExtractDialog.hpp"
+
+#include <filesystem>
+#include <utility>
 
 namespace NFSMW {
 
@@ -40,12 +44,13 @@ auto App::Create(rex::ui::WindowedAppContext &ctx)
 auto App::OnFinalizePaths(const rex::PathConfig &defaults,
                           std::function<void(rex::PathConfig)> resume)
     -> std::optional<rex::PathConfig> {
-  if (std::filesystem::exists(defaults.game_data_root / UI::kCompleteMarker)) {
+  if (std::filesystem::exists(defaults.game_data_root /
+                              ISOExtract::kCompleteMarker)) {
     return defaults;
   }
 
-  new UI::ISOExtractDialog(imgui_drawer(), defaults.game_data_root,
-                           std::move(resume));
+  new UI::ISOExtract::Dialog(imgui_drawer(), defaults.game_data_root,
+                             std::move(resume));
 
   return std::nullopt;
 }

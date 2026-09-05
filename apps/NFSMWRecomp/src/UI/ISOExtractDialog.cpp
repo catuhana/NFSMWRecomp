@@ -3,36 +3,26 @@
 #include <imgui.h>
 #include <nfd.hpp>
 
-#include <rex/filesystem/devices/disc_image_device.h>
-#include <rex/literals.h>
-
 #include <array>
 #include <chrono>
-#include <cstdint>
-#include <cstdio>
 #include <filesystem>
 #include <format>
 #include <future>
 #include <memory>
 #include <optional>
-#include <span>
-#include <string_view>
+#include <string>
 #include <system_error>
-
-#include <rex/system/xtypes.h>
+#include <utility>
 
 using namespace std::chrono_literals;
-using namespace rex::literals;
 
-namespace NFSMW::UI {
+namespace NFSMW::UI::ISOExtract {
 
 namespace csv = beman::cstring_view;
 
-using rex::X_STATUS;
-
 namespace {
 
-template <class... Ts> struct Overload : Ts... {
+template <class... Ts> struct Overloaded : Ts... {
   using Ts::operator()...;
 };
 
@@ -46,13 +36,13 @@ constexpr ImVec4 kTransparent{0.0F, 0.0F, 0.0F, 0.0F};
 
 } // namespace
 
-void ISOExtractDialog::OnDraw(ImGuiIO &io) {
+void Dialog::OnDraw(ImGuiIO &io) {
   if (const auto select_clicked = Render(io)) {
     Update(*select_clicked);
   }
 }
 
-auto ISOExtractDialog::Render(ImGuiIO &io) -> std::optional<bool> {
+auto Dialog::Render(ImGuiIO &io) -> std::optional<bool> {
   ImGui::SetNextWindowPos(ImVec2(0.0F, 0.0F));
   ImGui::SetNextWindowSize(io.DisplaySize);
 
@@ -82,10 +72,10 @@ auto ISOExtractDialog::Render(ImGuiIO &io) -> std::optional<bool> {
   ImGui::SetCursorPos(ImVec2(center_x, block_y));
   ImGui::BeginGroup();
 
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0F, -1.0F));
+
   ImGui::TextUnformatted("Setup");
   ImGui::Dummy(ImVec2(0.0F, spacing_y));
-
-  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0F, -1.0F));
 
   if (ImGui::BeginChild("##Description", ImVec2(block_width, row_height),
                         ImGuiChildFlags_Borders,
@@ -123,7 +113,7 @@ auto ISOExtractDialog::Render(ImGuiIO &io) -> std::optional<bool> {
     };
 
     std::visit(
-        Overload{
+        Overloaded{
             [&](const States::SelectISO &select) {
               if (select.last_error) {
                 draw_row("Error", to_string(*select.last_error), true);
@@ -187,11 +177,11 @@ auto ISOExtractDialog::Render(ImGuiIO &io) -> std::optional<bool> {
   return select_clicked;
 }
 
-void ISOExtractDialog::Update(bool select_clicked) {
+void Dialog::Update(bool select_clicked) {
   std::optional<State> next_state;
 
   std::visit(
-      Overload{
+      Overloaded{
           [&](const States::SelectISO &) {
             if (select_clicked) {
               next_state = States::Browsing{.path_future = LaunchFilePicker()};
@@ -204,13 +194,16 @@ void ISOExtractDialog::Update(bool select_clicked) {
               next_state =
                   browsing.path_future.get()
                       .transform([this](std::filesystem::path &&path) -> State {
-                        auto progress = std::make_shared<ExtractProgress>();
+                        auto progress =
+                            std::make_shared<Extraction::Progress>();
+
                         return States::Extracting{
                             .progress = progress,
                             .task = std::async(
                                 std::launch::async,
                                 [this, path = std::move(path), progress]() {
-                                  return ExtractISO(path, *progress);
+                                  return Extraction::Extract(
+                                      path, game_data_root_, *progress);
                                 })};
                       })
                       .value_or(States::SelectISO{});
@@ -238,7 +231,7 @@ void ISOExtractDialog::Update(bool select_clicked) {
   }
 }
 
-auto ISOExtractDialog::LaunchFilePicker()
+auto Dialog::LaunchFilePicker()
     -> std::future<std::optional<std::filesystem::path>> {
 #if defined(_WIN32)
   return std::async(std::launch::async, [this]() { return PromptForISO(); });
@@ -252,7 +245,7 @@ auto ISOExtractDialog::LaunchFilePicker()
 #endif
 }
 
-auto ISOExtractDialog::PromptForISO() -> std::optional<std::filesystem::path> {
+auto Dialog::PromptForISO() -> std::optional<std::filesystem::path> {
   NFD::Guard nfd_guard;
   NFD::UniquePath out_path;
 
@@ -267,146 +260,4 @@ auto ISOExtractDialog::PromptForISO() -> std::optional<std::filesystem::path> {
   return std::nullopt;
 }
 
-auto ISOExtractDialog::ExtractISO(const std::filesystem::path &iso_path,
-                                  ExtractProgress &progress)
-    -> ISOExtractDialog::Result<void> {
-  rex::filesystem::DiscImageDevice device("game:", iso_path);
-  if (!device.Initialize()) {
-    return std::unexpected(ExtractError::CouldNotInitialiseDevice);
-  }
-
-  std::error_code error_code;
-  std::filesystem::create_directories(game_data_root_, error_code);
-  if (error_code) {
-    return std::unexpected(ExtractError::CouldNotCreateDirectories);
-  }
-
-  const auto *root = device.root();
-  if (root == nullptr) {
-    return std::unexpected(ExtractError::CouldNotInitialiseDevice);
-  }
-
-  auto calculate_totals = [](this auto &self,
-                             const rex::filesystem::Entry &entry,
-                             ExtractProgress &progress) -> void {
-    for (const auto &child : entry.children()) {
-      if (child->attributes() & rex::filesystem::kFileAttributeDirectory) {
-        self(*child, progress);
-      } else {
-        progress.AddTotalBytes(child->size());
-      }
-    }
-  };
-
-  calculate_totals(*root, progress);
-
-  const auto space = std::filesystem::space(game_data_root_);
-  if (space.available < progress.GetTotalBytes()) {
-    return std::unexpected(ExtractError::NotEnoughDiskSpace);
-  }
-
-  if (auto result = ExtractEntryRecursive(*root, game_data_root_, progress);
-      !result.has_value()) {
-    return result;
-  }
-
-  if (auto *marker =
-          rex::filesystem::OpenFile(game_data_root_ / kCompleteMarker, "wb")) {
-    fclose(marker); // NOLINT
-  } else {
-    return std::unexpected(ExtractError::CouldNotWriteDestinationFile);
-  }
-
-  return {};
-}
-
-auto ISOExtractDialog::ExtractEntryRecursive(
-    const rex::filesystem::Entry &entry,
-    const std::filesystem::path &destination, ExtractProgress &progress)
-    -> ISOExtractDialog::Result<void> {
-  for (const auto &child : entry.children()) {
-    auto destination_path = destination / child->name();
-
-    if ((child->attributes() & rex::filesystem::kFileAttributeDirectory) !=
-        0U) {
-      std::error_code error_code;
-      std::filesystem::create_directories(destination_path, error_code);
-      if (error_code) {
-        return std::unexpected(ExtractError::CouldNotCreateDirectories);
-      }
-
-      if (auto result =
-              ExtractEntryRecursive(*child, destination_path, progress);
-          !result.has_value()) {
-        return result;
-      }
-
-      continue;
-    }
-
-    if (auto result = ExtractFile(*child, destination_path, progress);
-        !result.has_value()) {
-      return result;
-    }
-  }
-
-  return {};
-}
-
-auto ISOExtractDialog::ExtractFile(
-    rex::filesystem::Entry &entry,
-    const std::filesystem::path &destination_path, ExtractProgress &progress)
-    -> ISOExtractDialog::Result<void> {
-  rex::filesystem::File *raw_file = nullptr;
-  if (entry.Open(rex::filesystem::FileAccess::kFileReadData, &raw_file) !=
-          X_STATUS_SUCCESS ||
-      (raw_file == nullptr)) {
-    return std::unexpected(ExtractError::CouldNotReadSourceFile);
-  }
-
-  auto file_entry =
-      std::unique_ptr<rex::filesystem::File, void (*)(rex::filesystem::File *)>(
-          raw_file, [](rex::filesystem::File *file) {
-            if (file) {
-              file->Destroy();
-            }
-          });
-
-  auto *raw_out_file = rex::filesystem::OpenFile(destination_path, "wb");
-  if (raw_out_file == nullptr) {
-    return std::unexpected(ExtractError::CouldNotWriteDestinationFile);
-  }
-
-  std::unique_ptr<FILE, decltype(&fclose)> out_file(raw_out_file, &fclose);
-
-  constexpr std::size_t kBufferSize = 4_MiB;
-  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays)
-  auto buffer = std::make_unique_for_overwrite<uint8_t[]>(kBufferSize);
-
-  std::size_t remaining = entry.size();
-  std::size_t offset = 0;
-
-  while (remaining > 0) {
-    std::size_t bytes_read = 0;
-    const std::size_t bytes_to_read = std::min(remaining, kBufferSize);
-
-    const auto read_status = file_entry->ReadSync(
-        std::span<uint8_t>(buffer.get(), bytes_to_read), offset, &bytes_read);
-    if (read_status != X_STATUS_SUCCESS || bytes_read == 0) {
-      return std::unexpected(ExtractError::CouldNotReadSourceFile);
-    }
-
-    if (fwrite(buffer.get(), 1, bytes_read, out_file.get()) != bytes_read) {
-      return std::unexpected(ExtractError::CouldNotWriteDestinationFile);
-    }
-
-    offset += bytes_read;
-    remaining -= bytes_read;
-
-    progress.AddProcessedBytes(bytes_read);
-  }
-
-  return {};
-}
-
-} // namespace NFSMW::UI
+} // namespace NFSMW::UI::ISOExtract

@@ -21,6 +21,7 @@ add_executable(NFSMWRecomp WIN32
 
     src/UI/ISOExtractDialog.cpp
 
+    src/ISOExtract.cpp
     src/NFSMWRecomp.cpp
 )
 

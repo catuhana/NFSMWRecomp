@@ -2,6 +2,8 @@
 
 #include <rex/cvar.h>
 
+#include <string_view>
+
 // NOLINTNEXTLINE
 REXCVAR_DEFINE_BOOL(disable_post_processing, false, "Patches",
                     "Disable post-processing effects");
