@@ -1,6 +1,7 @@
 #include "ISOExtractDialog.hpp"
 
 #include <imgui.h>
+#define NFD_THROWS_EXCEPTIONS
 #include <nfd.hpp>
 
 #include <array>
