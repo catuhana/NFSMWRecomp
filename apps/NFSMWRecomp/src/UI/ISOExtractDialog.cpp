@@ -26,11 +26,11 @@ using namespace rex::literals;
 
 namespace NFSMW::UI {
 
-namespace {
-
 namespace csv = beman::cstring_view;
 
 using rex::X_STATUS;
+
+namespace {
 
 template <class... Ts> struct Overload : Ts... {
   using Ts::operator()...;
@@ -52,7 +52,7 @@ void ISOExtractDialog::OnDraw(ImGuiIO &io) {
   }
 }
 
-std::optional<bool> ISOExtractDialog::Render(ImGuiIO &io) {
+auto ISOExtractDialog::Render(ImGuiIO &io) -> std::optional<bool> {
   ImGui::SetNextWindowPos(ImVec2(0.0F, 0.0F));
   ImGui::SetNextWindowSize(io.DisplaySize);
 
@@ -238,8 +238,8 @@ void ISOExtractDialog::Update(bool select_clicked) {
   }
 }
 
-std::future<std::optional<std::filesystem::path>>
-ISOExtractDialog::LaunchFilePicker() {
+auto ISOExtractDialog::LaunchFilePicker()
+    -> std::future<std::optional<std::filesystem::path>> {
 #if defined(_WIN32)
   return std::async(std::launch::async, [this]() { return PromptForISO(); });
 #else
@@ -252,7 +252,7 @@ ISOExtractDialog::LaunchFilePicker() {
 #endif
 }
 
-std::optional<std::filesystem::path> ISOExtractDialog::PromptForISO() {
+auto ISOExtractDialog::PromptForISO() -> std::optional<std::filesystem::path> {
   NFD::Guard nfd_guard;
   NFD::UniquePath out_path;
 
@@ -267,9 +267,9 @@ std::optional<std::filesystem::path> ISOExtractDialog::PromptForISO() {
   return std::nullopt;
 }
 
-ISOExtractDialog::Result<void>
-ISOExtractDialog::ExtractISO(const std::filesystem::path &iso_path,
-                             ExtractProgress &progress) {
+auto ISOExtractDialog::ExtractISO(const std::filesystem::path &iso_path,
+                                  ExtractProgress &progress)
+    -> ISOExtractDialog::Result<void> {
   rex::filesystem::DiscImageDevice device("game:", iso_path);
   if (!device.Initialize()) {
     return std::unexpected(ExtractError::CouldNotInitialiseDevice);
@@ -286,22 +286,22 @@ ISOExtractDialog::ExtractISO(const std::filesystem::path &iso_path,
     return std::unexpected(ExtractError::CouldNotInitialiseDevice);
   }
 
-  auto calculate_totals = [](auto &self, const rex::filesystem::Entry &entry,
+  auto calculate_totals = [](this auto &self,
+                             const rex::filesystem::Entry &entry,
                              ExtractProgress &progress) -> void {
     for (const auto &child : entry.children()) {
       if (child->attributes() & rex::filesystem::kFileAttributeDirectory) {
-        self(self, *child, progress);
+        self(*child, progress);
       } else {
-        progress.total_bytes.fetch_add(child->size(),
-                                       std::memory_order_relaxed);
+        progress.AddTotalBytes(child->size());
       }
     }
   };
 
-  calculate_totals(calculate_totals, *root, progress);
+  calculate_totals(*root, progress);
 
   const auto space = std::filesystem::space(game_data_root_);
-  if (space.available < progress.total_bytes.load(std::memory_order_relaxed)) {
+  if (space.available < progress.GetTotalBytes()) {
     return std::unexpected(ExtractError::NotEnoughDiskSpace);
   }
 
@@ -320,9 +320,10 @@ ISOExtractDialog::ExtractISO(const std::filesystem::path &iso_path,
   return {};
 }
 
-ISOExtractDialog::Result<void> ISOExtractDialog::ExtractEntryRecursive(
+auto ISOExtractDialog::ExtractEntryRecursive(
     const rex::filesystem::Entry &entry,
-    const std::filesystem::path &destination, ExtractProgress &progress) {
+    const std::filesystem::path &destination, ExtractProgress &progress)
+    -> ISOExtractDialog::Result<void> {
   for (const auto &child : entry.children()) {
     auto destination_path = destination / child->name();
 
@@ -352,10 +353,10 @@ ISOExtractDialog::Result<void> ISOExtractDialog::ExtractEntryRecursive(
   return {};
 }
 
-ISOExtractDialog::Result<void>
-ISOExtractDialog::ExtractFile(rex::filesystem::Entry &entry,
-                              const std::filesystem::path &destination_path,
-                              ExtractProgress &progress) {
+auto ISOExtractDialog::ExtractFile(
+    rex::filesystem::Entry &entry,
+    const std::filesystem::path &destination_path, ExtractProgress &progress)
+    -> ISOExtractDialog::Result<void> {
   rex::filesystem::File *raw_file = nullptr;
   if (entry.Open(rex::filesystem::FileAccess::kFileReadData, &raw_file) !=
           X_STATUS_SUCCESS ||
@@ -402,7 +403,7 @@ ISOExtractDialog::ExtractFile(rex::filesystem::Entry &entry,
     offset += bytes_read;
     remaining -= bytes_read;
 
-    progress.processed_bytes.fetch_add(bytes_read, std::memory_order_relaxed);
+    progress.AddProcessedBytes(bytes_read);
   }
 
   return {};

@@ -23,19 +23,34 @@ namespace csv = beman::cstring_view;
 inline constexpr std::string_view kCompleteMarker = ".extracted";
 
 struct ExtractProgress {
-  std::atomic<size_t> total_bytes{0};
-  std::atomic<size_t> processed_bytes{0};
+public:
+  void AddTotalBytes(std::size_t bytes) noexcept {
+    total_bytes_.fetch_add(bytes, std::memory_order_relaxed);
+  }
 
-  [[nodiscard]] float GetProgress() const noexcept {
-    const size_t total = total_bytes.load(std::memory_order_relaxed);
+  void AddProcessedBytes(std::size_t bytes) noexcept {
+    processed_bytes_.fetch_add(bytes, std::memory_order_relaxed);
+  }
+
+  [[nodiscard]] auto GetTotalBytes() const noexcept -> std::size_t {
+    return total_bytes_.load(std::memory_order_relaxed);
+  }
+
+  [[nodiscard]] auto GetProgress() const noexcept -> float {
+    const std::size_t total = GetTotalBytes();
     if (total == 0) {
       return 0.0F;
     }
 
-    const size_t processed = processed_bytes.load(std::memory_order_relaxed);
+    const std::size_t processed =
+        processed_bytes_.load(std::memory_order_relaxed);
     return std::clamp(static_cast<float>(processed) / static_cast<float>(total),
                       0.0F, 1.0F);
   }
+
+private:
+  std::atomic<size_t> total_bytes_{0};
+  std::atomic<size_t> processed_bytes_{0};
 };
 
 class ISOExtractDialog : public rex::ui::ImGuiDialog {
@@ -97,22 +112,23 @@ private:
   using State =
       std::variant<States::SelectISO, States::Browsing, States::Extracting>;
 
-  std::optional<bool> Render(ImGuiIO &io);
+  auto Render(ImGuiIO &io) -> std::optional<bool>;
   void Update(bool select_clicked);
 
-  [[nodiscard]] static std::optional<std::filesystem::path> PromptForISO();
-  std::future<std::optional<std::filesystem::path>> LaunchFilePicker();
+  [[nodiscard]] static auto PromptForISO()
+      -> std::optional<std::filesystem::path>;
+  auto LaunchFilePicker() -> std::future<std::optional<std::filesystem::path>>;
 
-  [[nodiscard]] Result<void> ExtractISO(const std::filesystem::path &iso_path,
-                                        ExtractProgress &progress);
-  [[nodiscard]] Result<void>
+  [[nodiscard]] auto ExtractISO(const std::filesystem::path &iso_path,
+                                ExtractProgress &progress) -> Result<void>;
+  [[nodiscard]] auto
   ExtractEntryRecursive(const rex::filesystem::Entry &entry,
                         const std::filesystem::path &destination,
-                        ExtractProgress &progress);
-  [[nodiscard]] static Result<void>
+                        ExtractProgress &progress) -> Result<void>;
+  [[nodiscard]] static auto
   ExtractFile(rex::filesystem::Entry &entry,
               const std::filesystem::path &destination_path,
-              ExtractProgress &progress);
+              ExtractProgress &progress) -> Result<void>;
 
   std::filesystem::path game_data_root_;
   std::function<void(rex::PathConfig)> resume_;
