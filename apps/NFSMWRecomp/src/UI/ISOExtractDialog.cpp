@@ -234,15 +234,15 @@ void Dialog::Update(bool select_clicked) {
 
 auto Dialog::LaunchFilePicker()
     -> std::future<std::optional<std::filesystem::path>> {
-#if defined(_WIN32)
-  return std::async(std::launch::async, [this]() { return PromptForISO(); });
-#else
+#if defined(__APPLE__)
   auto result = PromptForISO();
 
   std::promise<std::optional<std::filesystem::path>> promise;
   promise.set_value(std::move(result));
 
   return promise.get_future();
+#else
+  return std::async(std::launch::async, [this]() { return PromptForISO(); });
 #endif
 }
 
