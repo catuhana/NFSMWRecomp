@@ -20,6 +20,8 @@ FetchContent_Declare(beman.cstring_view
 )
 FetchContent_MakeAvailable(beman.cstring_view)
 
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+
 add_executable(NFSMWRecomp WIN32
     src/Patches/BlackEdition.cpp
     src/Patches/PostProcessing.cpp
