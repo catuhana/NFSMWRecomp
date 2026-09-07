@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=NFSMWRecomp
+Icon=io.github.catuhana.NFSMWRecomp
+Categories=Game;ArcadeGame;
+PrefersNonDefaultGPU=true

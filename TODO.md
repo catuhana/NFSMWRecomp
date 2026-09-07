@@ -4,3 +4,4 @@
 - Use GameInput.
 - Properly categorise patches.
 - Use higher quality recreation of the game icon maybe? <https://www.steamgriddb.com/game/5258915/icons>
+- Do the actual packaging for macOS and Linux.
