@@ -21,6 +21,7 @@ FetchContent_Declare(beman.cstring_view
 FetchContent_MakeAvailable(beman.cstring_view)
 
 add_executable(NFSMWRecomp WIN32
+    src/Patches/BlackEdition.cpp
     src/Patches/PostProcessing.cpp
 
     src/UI/ISOExtractDialog.cpp

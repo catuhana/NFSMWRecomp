@@ -17,4 +17,5 @@ template <Patch... TPatches> void InstallAll(rex::memory::Memory &memory) {
 
 } // namespace NFSMW::Patches
 
+#include "Patches/BlackEdition.hpp"   // IWYU pragma: export
 #include "Patches/PostProcessing.hpp" // IWYU pragma: export

@@ -59,7 +59,8 @@ void App::OnConfigurePaths(rex::PathConfig &paths) { SetPaths(paths); }
 
 void App::OnPostLoadXexImage() {
   if (auto *memory = runtime()->memory()) {
-    Patches::InstallAll<Patches::PostProcessing>(*memory);
+    Patches::InstallAll<Patches::PostProcessing, Patches::BlackEdition>(
+        *memory);
   }
 }
 
