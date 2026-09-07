@@ -31,6 +31,7 @@
 0x824B1498 = { end = 0x824B14B8 }
 0x824B14B8 = { end = 0x824B14D8 }
 0x824B14D8 = { end = 0x824B14F8 }
+0x824B14F8 = { end = 0x824B1518 }
 0x824EDCF0 = { end = 0x824EDD58 }
 0x826BE068 = { name = "KeTlsAlloc_thunk", end = 0x826BE06C }
 0x826E7100 = { end = 0x826E711C }
