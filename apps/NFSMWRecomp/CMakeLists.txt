@@ -32,22 +32,24 @@ add_executable(NFSMWRecomp WIN32
 )
 
 if(WIN32)
+    set(PACKAGING_DIR ${CMAKE_CURRENT_SOURCE_DIR}/packaging/Windows)
+
     set(NFSMW_RECOMP_VERSION_RC "${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},0")
     set(NFSMW_RECOMP_VERSION_MANIFEST "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.0")
 
     configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/packaging/Windows/NFSMWRecomp.rc
+        ${PACKAGING_DIR}/NFSMWRecomp.rc.in
         ${CMAKE_CURRENT_BINARY_DIR}/NFSMWRecomp.rc
         @ONLY
     )
     configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/packaging/Windows/NFSMWRecomp.manifest
+        ${PACKAGING_DIR}/NFSMWRecomp.manifest.in
         ${CMAKE_CURRENT_BINARY_DIR}/NFSMWRecomp.manifest
         @ONLY
     )
     
     target_include_directories(NFSMWRecomp PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/packaging/Windows
+        ${PACKAGING_DIR}
     )
 
     target_sources(NFSMWRecomp PRIVATE
