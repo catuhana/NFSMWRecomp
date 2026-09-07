@@ -15,7 +15,7 @@ void PostProcessing::Install(rex::memory::Memory &memory) {
 
   rex::cvar::RegisterChangeCallback(
       "disable_post_processing",
-      [&memory](std::string_view, std::string_view new_value) noexcept {
+      [&memory](std::string_view, std::string_view new_value) noexcept -> void {
         SetDisabled(memory, new_value == "true");
       });
 }

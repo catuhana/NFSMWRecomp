@@ -2,28 +2,22 @@
 
 #include <rex/cvar.h>
 
-#include <string_view>
-
 // NOLINTNEXTLINE
 REXCVAR_DEFINE_BOOL(black_edition, true, "Patches",
-                    "Enable Black Edition content");
+                    "Enable Black Edition content")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
 
 namespace NFSMW::Patches {
 
 void BlackEdition::Install(rex::memory::Memory &memory) {
-  SetEnabled(memory, REXCVAR_GET(black_edition));
-
-  rex::cvar::RegisterChangeCallback(
-      "black_edition",
-      [&memory](std::string_view, std::string_view new_value) noexcept {
-        SetEnabled(memory, new_value == "true");
-      });
+  if (REXCVAR_GET(black_edition)) {
+    Apply(memory);
+  }
 }
 
-void BlackEdition::SetEnabled(rex::memory::Memory &memory,
-                              bool enabled) noexcept {
+void BlackEdition::Apply(rex::memory::Memory &memory) noexcept {
   if (auto *flag = memory.TranslateVirtual(kFlagVirtualAddress)) {
-    *flag = enabled ? 1 : 0;
+    *flag = 1;
   }
 }
 
