@@ -61,10 +61,6 @@ endif()
 rexglue_setup_target(NFSMWRecomp GPU_PLUGINS xenos)
 
 target_link_libraries(NFSMWRecomp PRIVATE nfd beman::cstring_view)
-# Workaround to imgui issue for now.
-# https://github.com/rexglue/rexglue-sdk/pull/423
-# should fix this I think.
-target_link_libraries(NFSMWRecomp PRIVATE rex::ui)
 
 merge_game_configs(
     TARGET NFSMWRecomp
