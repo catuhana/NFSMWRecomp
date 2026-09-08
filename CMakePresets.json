@@ -23,10 +23,6 @@
       "hidden": true,
       "name": "windows-base",
       "inherits": "base",
-      "cacheVariables": {
-        "REXGLUE_USE_D3D12": false,
-        "REXGLUE_USE_VULKAN": true
-      },
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
