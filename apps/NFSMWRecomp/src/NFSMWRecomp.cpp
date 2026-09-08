@@ -9,6 +9,16 @@
 #include <filesystem>
 #include <utility>
 
+// Force the use of discrete GPUs on devices with hybric graphics.
+#ifdef _WIN32
+#include <windows.h>
+
+extern "C" {
+_declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+_declspec(dllexport) DWORD AmdPowerXpressRequestHighPerformance = 0x00000001;
+}
+#endif
+
 namespace NFSMW {
 
 namespace {
