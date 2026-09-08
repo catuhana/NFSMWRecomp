@@ -9,7 +9,7 @@ FetchContent_Declare(nfd
     GIT_TAG v1.3.0
 )
 if(LINUX)
-    set(NFD_PORTAL ON)
+    set(NFD_PORTAL ON CACHE BOOL "Use xdg-desktop-portal" FORCE)
 endif()
 FetchContent_MakeAvailable(nfd)
 
